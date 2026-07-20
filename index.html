@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Pool — Rummy Ledger</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Kannada:wght@600;700&family=Noto+Sans+Devanagari:wght@600;700&display=swap');
+
+:root{
+  --felt: #163527;
+  --felt-deep: #0e2419;
+  --felt-line: rgba(243,236,221,0.10);
+  --cream: #F3ECDD;
+  --cream-dim: #E7DEC8;
+  --ink: #1F2A24;
+  --ink-dim: #5B6660;
+  --gold: #C9A227;
+  --gold-deep: #9A7B18;
+  --brick: #A13D2B;
+  --teal: #2C6E63;
+  --shadow: 0 8px 24px rgba(0,0,0,0.28);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 14px),
+    radial-gradient(ellipse at top, var(--felt) 0%, var(--felt-deep) 75%);
+  min-height:100vh;
+  font-family:'IBM Plex Sans', sans-serif;
+  color:var(--cream);
+  padding:32px 16px 80px;
+}
+
+.wrap{max-width:920px;margin:0 auto;}
+
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--gold);
+  opacity:0.85;
+}
+
+h1{
+  font-family:'Fraunces', 'Noto Sans Kannada', 'Noto Sans Devanagari', serif;
+  font-weight:700;
+  font-size:27px;
+  line-height:1.4;
+  margin:4px 0 4px;
+  color:var(--cream);
+  letter-spacing:-0.005em;
+}
+
+.sub{color:var(--cream-dim);font-size:14px;margin-bottom:28px;opacity:0.75;}
+.guide-jump{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold);text-decoration:underline;margin-left:8px;opacity:0.85;}
+.guide-jump:hover{opacity:1;}
+
+.panel{
+  background:var(--cream);
+  color:var(--ink);
+  border-radius:14px;
+  padding:26px 26px 22px;
+  box-shadow:var(--shadow);
+  margin-bottom:22px;
+}
+
+.panel h2{
+  font-family:'Fraunces', serif;
+  font-size:22px;
+  font-weight:600;
+  margin:0 0 4px;
+  color:var(--felt-deep);
+}
+.panel .hint{font-size:13px;color:var(--ink-dim);margin-bottom:18px;}
+
+label{
+  display:block;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--ink-dim);
+  margin-bottom:5px;
+  font-weight:600;
+}
+
+input[type=text], input[type=number], select{
+  width:100%;
+  padding:9px 11px;
+  border:1.5px solid #D6CDB4;
+  border-radius:8px;
+  background:#fff;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-size:14px;
+  color:var(--ink);
+}
+input[type=number]{font-family:'IBM Plex Mono', monospace;}
+input:focus, select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.row > div{flex:1;min-width:120px;}
+
+.player-row{
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.player-row input{flex:1;}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1.5px solid #D6CDB4;
+  background:#fff;color:var(--brick);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.icon-btn:hover{background:#fbeee9;}
+
+.btn{
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:600;
+  font-size:13px;
+  padding:10px 18px;
+  border-radius:9px;
+  border:none;
+  cursor:pointer;
+  letter-spacing:0.01em;
+}
+.btn--primary{background:var(--felt); color:var(--cream);}
+.btn--primary:hover{background:var(--felt-deep);}
+.btn--gold{background:var(--gold); color:var(--felt-deep);}
+.btn--gold:hover{background:var(--gold-deep); color:var(--cream);}
+.btn--ghost{background:transparent;color:var(--ink-dim);border:1.5px solid #D6CDB4;}
+.btn--ghost:hover{background:#eee5cf;}
+.btn--full{width:100%;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.add-player{background:transparent;border:1.5px dashed #C7BC9B;color:var(--ink-dim);
+  padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;}
+.add-player:hover{background:#eee5cf;}
+
+.guide-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold-deep);margin-bottom:8px;font-weight:700;}
+.guide-section ol, .guide-section ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7;color:var(--ink);}
+.guide-section li{margin-bottom:4px;}
+.guide-section p{font-size:13.5px;line-height:1.6;color:var(--ink);margin:0;}
+.guide-section{margin-bottom:16px;}
+.guide-section:last-child{margin-bottom:0;}
+
+.players-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.player-chip{
+  display:flex;align-items:center;gap:8px;
+  background:#FBF8F0;border:1.5px solid #E4DBC2;border-radius:20px;
+  padding:6px 8px 6px 14px;font-size:13px;font-weight:600;color:var(--felt-deep);
+}
+.player-chip.inactive{opacity:0.55; border-style:dashed;}
+.player-chip .leave-btn{
+  width:22px;height:22px;border-radius:50%;border:none;background:transparent;color:var(--brick);
+  cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;
+}
+.player-chip .leave-btn:hover{background:#FBEAE6;}
+.player-chip .rejoin-btn{
+  font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--teal);
+  background:transparent;border:none;cursor:pointer;font-weight:700;
+}
+.left-tag{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.05em;margin-left:6px;}
+.add-player-inline{display:flex;gap:8px;margin-top:4px;}
+.add-player-inline input{flex:1;}
+
+/* --- pot header on game screen --- */
+.pot-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  background:linear-gradient(135deg, var(--felt-deep), var(--felt));
+  border-radius:14px;padding:20px 26px;margin-bottom:20px;
+  box-shadow:var(--shadow);
+}
+.pot-header .num{font-family:'Fraunces',serif;font-weight:700;font-size:38px;color:var(--gold);}
+.pot-header .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--cream-dim);}
+.pot-header .cfgline{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--cream-dim);opacity:0.8;text-align:right;}
+
+.game-complete-banner{
+  background:linear-gradient(135deg, var(--gold), var(--gold-deep));
+  color:var(--felt-deep);
+  border-radius:12px;
+  padding:14px 20px;
+  margin-bottom:18px;
+  font-family:'IBM Plex Sans',sans-serif;
+  font-weight:600;
+  font-size:14px;
+  box-shadow:var(--shadow);
+}
+.game-complete-banner b{font-family:'Fraunces',serif;font-weight:700;}
+
+.share-card{
+  width:640px;
+  background:linear-gradient(160deg, var(--felt), var(--felt-deep));
+  padding:40px 44px 32px;
+  font-family:'IBM Plex Sans', sans-serif;
+  color:var(--cream);
+}
+.share-card .sc-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.share-card h1{font-family:'Fraunces',serif;font-weight:700;font-size:36px;margin:0 0 6px;color:var(--cream);letter-spacing:-0.01em;}
+.share-card .sc-sub{font-size:13.5px;color:var(--cream-dim);opacity:0.85;margin-bottom:8px;}
+.share-card .sc-section-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin:26px 0 10px;border-bottom:1px solid var(--felt-line);padding-bottom:8px;}
+.share-card table{width:100%;border-collapse:collapse;}
+.share-card td{padding:10px 0;font-size:17px;border-bottom:1px solid rgba(243,236,221,0.08);font-family:'IBM Plex Mono',monospace;}
+.share-card td.sc-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:16px;color:var(--cream);}
+.share-card td.sc-amt{font-weight:700;}
+.share-card td.sc-amt.positive{color:#8FE0CB;}
+.share-card td.sc-amt.negative{color:#F3AE91;}
+
+.share-card .sc-games-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.share-card .sc-games-table th{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--gold);text-align:right;padding:6px 5px;border-bottom:1px solid rgba(243,236,221,0.15);}
+.share-card .sc-games-table th:first-child{text-align:left;}
+.share-card .sc-games-table td{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:7px 5px;text-align:right;border-bottom:1px solid rgba(243,236,221,0.08);}
+.share-card .sc-games-table td:first-child{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;text-align:left;color:var(--cream);white-space:nowrap;}
+.share-card .sc-games-table td.positive{color:#8FE0CB;font-weight:600;}
+.share-card .sc-games-table td.negative{color:#F3AE91;font-weight:600;}
+.share-card .sc-games-table tr.sc-total-row td{font-weight:700;border-top:2px solid var(--gold);border-bottom:none;padding-top:11px;}
+.share-card .sc-settle-line{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:15px;border-bottom:1px dashed rgba(243,236,221,0.12);}
+.share-card .sc-settle-line b{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-size:15.5px;}
+.share-card .sc-footer{margin-top:30px;font-size:11px;color:var(--cream-dim);opacity:0.55;text-align:center;font-family:'IBM Plex Mono', 'Noto Sans Kannada', 'Noto Sans Devanagari', monospace;letter-spacing:0.05em;}
+
+/* --- status stamps --- */
+.status-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.stamp{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  padding:7px 12px;
+  border-radius:20px;
+  border:1.5px solid #C7BC9B;
+  background:#fff;
+  color:var(--ink-dim);
+  cursor:pointer;
+  transition:transform 0.12s ease;
+}
+.stamp:hover{transform:translateY(-1px);}
+.stamp.active{transform:rotate(-2deg) scale(1.02);}
+.stamp[data-status="drop"].active{background:var(--ink); color:var(--cream); border-color:var(--ink);}
+.stamp[data-status="middle-drop"].active{background:var(--brick); color:var(--cream); border-color:var(--brick);}
+.stamp[data-status="booked"].active{background:var(--brick); color:var(--cream); border-color:var(--brick); box-shadow:0 0 0 3px rgba(161,61,43,0.18);}
+.stamp[data-status="first"].active{background:var(--teal); color:var(--cream); border-color:var(--teal);}
+.stamp[data-status="second"].active{background:#B98A2E; color:var(--cream); border-color:#B98A2E;}
+.stamp[data-status="winner"].active{background:var(--gold); color:var(--felt-deep); border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,162,39,0.25);}
+.stamp[data-status="nil"].active{background:#4C7A5E; color:var(--cream); border-color:#4C7A5E;}
+.stamp[data-status="split"].active{background:#7A5C8F; color:var(--cream); border-color:#7A5C8F;}
+
+.points-inline{
+  display:inline-flex;align-items:center;gap:6px;margin-left:4px;
+}
+.points-inline input{width:64px;padding:6px 8px;font-size:13px;}
+
+.split-inline{
+  display:inline-flex;align-items:center;gap:4px;margin-left:4px;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-dim);font-weight:600;
+}
+.split-inline input{width:72px;padding:6px 8px;font-size:13px;font-family:'IBM Plex Mono',monospace;}
+
+.player-card{
+  border:1.5px solid #E4DBC2;border-radius:10px;padding:14px 16px;margin-bottom:10px;background:#FBF8F0;
+}
+.player-card .pname{font-weight:600;font-size:15px;margin-bottom:8px;color:var(--felt-deep);}
+.player-card .payline{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-dim);margin-top:8px;}
+
+.dealer-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.06em;
+  color:var(--gold-deep); text-transform:uppercase; margin-left:8px;
+}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{
+  text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-dim);
+  padding:8px 10px;border-bottom:2px solid #E4DBC2;
+}
+td{padding:9px 10px;border-bottom:1px solid #EFE9D9;font-family:'IBM Plex Mono',monospace;}
+tr:last-child td{border-bottom:none;}
+.positive{color:var(--teal);font-weight:600;}
+.negative{color:var(--brick);font-weight:600;}
+.zero{color:var(--ink-dim);}
+
+.round-block{border:1px solid #E4DBC2;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.round-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;background:#FBF8F0;cursor:pointer;font-size:13px;
+}
+.round-head .rtitle{font-weight:600;color:var(--felt-deep);}
+.round-head .rmeta{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-dim);}
+.round-body{padding:0 16px 12px;display:none;}
+.round-body.open{display:block;}
+.round-body table{margin-top:6px;}
+
+.scoreboard-table{border-collapse:collapse;white-space:nowrap;}
+.scoreboard-table th, .scoreboard-table td{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+  padding:7px 10px;border-bottom:1px solid #EFE9D9;text-align:center;
+}
+.scoreboard-table th{
+  text-transform:uppercase;letter-spacing:0.05em;font-size:10px;color:var(--ink-dim);
+  border-bottom:2px solid #E4DBC2;
+}
+.scoreboard-table td:first-child, .scoreboard-table th:first-child{
+  position:sticky;left:0;background:#FBF8F0;text-align:left;font-weight:600;
+  font-family:'IBM Plex Sans',sans-serif;color:var(--felt-deep);z-index:1;
+}
+.scoreboard-table .sb-net{font-weight:700;}
+.sb-winner{color:var(--gold-deep);}
+.sb-nil{color:var(--ink-dim);}
+.sb-pay{color:var(--brick);}
+
+.settle-list{list-style:none;padding:0;margin:0;}
+.settle-list li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 14px;border-radius:9px;background:#FBF8F0;border:1px solid #E4DBC2;margin-bottom:8px;
+  font-size:14px;
+}
+.settle-list .amt{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--brick);}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.footer-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;}
+
+.empty{color:var(--ink-dim);font-size:13px;font-style:italic;padding:8px 0;}
+
+.errbox{background:#FBEAE6;border:1.5px solid var(--brick);color:var(--brick);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+.split-ok{background:#EAF5F0;border:1.5px solid var(--teal);color:var(--teal);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+
+.rule-note{font-size:12px;color:var(--ink-dim);background:#F2ECDA;border-radius:8px;padding:10px 12px;margin-top:14px;line-height:1.5;}
+
+@media (max-width: 640px){
+  h1{font-size:19px;}
+  .pot-header{flex-direction:column;align-items:flex-start;gap:10px;}
+  .pot-header .cfgline{text-align:left;}
+}
+</style>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Indian Rummy · Cash Ledger</div>
+  <h1>Ispeet | ಇಸ್ಪೀಟ್ | ಪೇಕ | तेरह पत्ते</h1>
+  <div class="sub">Set the table, record every round, settle up at the end.<a href="#howToUse" class="guide-jump">how to use ↓</a></div>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen">
+    <div class="panel">
+      <h2>Players</h2>
+      <div class="hint">2–8 players. Whoever deals is just for the record — it doesn't affect money.</div>
+      <div id="playerList"></div>
+      <button class="add-player" id="addPlayerBtn">+ Add player</button>
+    </div>
+
+    <div class="panel">
+      <h2>Table stakes</h2>
+      <div class="hint">Configurable amounts — change any time before starting.</div>
+      <div class="row">
+        <div>
+          <label>Drop ($)</label>
+          <input type="number" id="cfgDrop" value="3" min="0" step="0.5">
+        </div>
+        <div>
+          <label>Middle-drop ($)</label>
+          <input type="number" id="cfgMiddle" value="5" min="0" step="0.5">
+        </div>
+        <div>
+          <label>Full count / Booked ($)</label>
+          <input type="number" id="cfgBooked" value="10" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="rule-note">
+        <b>First / Second scoring:</b> among players who stayed in but didn't win, First pays the same as the Drop amount, Second pays the same as the Middle-drop amount.<br><br>
+        <b>Nil:</b> pays nothing. <b>Split:</b> exactly 2 players split a charge together (never just 1) — enter any dollar amounts, but they must add up to exactly what everyone else at the table is paying that round.
+      </div>
+    </div>
+
+    <div id="setupError"></div>
+    <button class="btn btn--primary btn--full" id="startGameBtn" style="padding:14px;font-size:15px;">Start recording rounds →</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" style="display:none;">
+    <div class="pot-header">
+      <div>
+        <div class="lbl">Game <span id="gameNumDisplay">1</span> · Round</div>
+        <div class="num" id="roundNumDisplay">1</div>
+      </div>
+      <div class="cfgline">
+        Drop $<span id="cfgDropDisp"></span> · Mid-drop $<span id="cfgMiddleDisp"></span> · Booked $<span id="cfgBookedDisp"></span><br>
+        <span id="playerCountDisp"></span> players
+        &nbsp;·&nbsp;<a href="#" id="editConfigLink" style="color:var(--gold);text-decoration:underline;font-family:'IBM Plex Sans',sans-serif;">edit</a>
+      </div>
+    </div>
+
+    <div id="gameCompleteBanner" style="display:none;"></div>
+
+    <div class="panel table-panel">
+      <h2>Table</h2>
+      <div class="hint">Add a player anytime — they join starting next round. "Leave" keeps their history but drops them from future rounds.</div>
+      <div class="players-chip-row" id="playersChipRow"></div>
+      <div class="add-player-inline">
+        <input type="text" id="midGamePlayerName" placeholder="New player name">
+        <button class="btn btn--ghost" id="midGameAddBtn">+ Add to table</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="topbar">
+        <h2 style="margin:0;">Record this round</h2>
+        <div>
+          <label style="display:inline;margin-right:6px;">Dealer</label>
+          <select id="dealerSelect" style="width:auto;display:inline-block;padding:6px 10px;"></select>
+        </div>
+      </div>
+      <div class="hint">Tap a status for each player. "Valid" needs a leftover points total.</div>
+      <div id="playerStatusList"></div>
+      <div id="splitSummary" style="display:none;"></div>
+      <div id="roundError"></div>
+      <div class="footer-actions">
+        <button class="btn btn--gold" id="saveRoundBtn">Save Round</button>
+        <span id="saveConfirm" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);font-weight:600;display:none;"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Scoreboard</h2>
+      <div class="hint">Every round of the <b>current</b> game at a glance — resets to a blank grid when a game rolls over. See Session game history below for the full session.</div>
+      <div id="scoreboardWrap" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Session game history</h2>
+      <div class="hint">Each dealer-cycle game this session, side by side — how much each player finished up or down, per game. The <b>Session</b> row below the line is the running total for the whole session — carries across game rollovers, never resets until New Game.</div>
+      <div id="gameHistoryWrap" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="topbar">
+        <h2 style="margin:0;">Final Settle</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn--gold" id="exportExcelBtn">Export to Excel</button>
+          <button class="btn btn--ghost" id="newGameBtn">New game</button>
+        </div>
+      </div>
+      <div class="hint">Updates automatically as rounds are saved and carries across game rollovers — this reflects everyone's balance for the whole session, whether you're on game 1 or game 4. No separate action needed to "finalize" — just check here whenever you're done playing.</div>
+      <div id="settleWrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Share session tally</h2>
+      <div class="hint">One clean image with just the final numbers for this session — every dealer-cycle game combined, good for the group chat. Round-by-round detail stays in the Excel export.</div>
+      <button class="btn btn--gold" id="downloadTallyBtn">Download tally image (PNG)</button>
+    </div>
+  </div>
+
+  <div id="shareCardHost" style="position:fixed; left:-9999px; top:0;"></div>
+
+  <div class="panel" id="howToUse">
+    <h2>How to use this</h2>
+    <div class="guide-section">
+      <div class="guide-title">Scoring, step by step</div>
+      <ol>
+        <li>Add everyone playing and set your stakes, then tap <b>Start recording rounds</b>.</li>
+        <li>After each hand, tap a status for every player (Drop, Winner, Nil, etc.) and hit <b>Save Round</b>.</li>
+        <li>Check <b>Scoreboard</b> and <b>Session game history</b> any time to see where things stand.</li>
+        <li>When you're done for the night, check <b>Final Settle</b> for who pays whom, and download the PNG tally or the Excel file to keep a copy.</li>
+      </ol>
+    </div>
+    <div class="guide-section">
+      <div class="guide-title">Do</div>
+      <ul>
+        <li>Keep using the same device (phone, tablet, or laptop) and the same browser tab for the whole session.</li>
+        <li>Download the PNG tally or Excel file before you close out, if you want a saved copy.</li>
+        <li>Feel free to close the tab and come back later — as long as it's the same device and browser, your data is still there.</li>
+      </ul>
+    </div>
+    <div class="guide-section">
+      <div class="guide-title">Don't</div>
+      <ul>
+        <li>Don't switch to a different device or browser mid-session — the data stays on the device you started on, it doesn't follow you.</li>
+        <li>Don't use a private/incognito window — some browsers erase that data as soon as the window closes.</li>
+        <li>Don't clear this browser's site data for the app mid-game, or the session's scores will be lost.</li>
+      </ul>
+    </div>
+    <div class="guide-section">
+      <div class="guide-title">One more thing</div>
+      <p>No cloud account, no sign-in, nothing sent anywhere — everything is calculated and saved right here on your device, in your browser. It just needs an internet connection the first time this page loads, same as any website; after that, playing and scoring doesn't send your data anywhere.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'rummy-ledger-state';
+
+// Outside Claude's artifact preview, window.storage doesn't exist.
+// This polyfill gives it the exact same async get/set/delete/list API,
+// backed by the browser's localStorage, so nothing else in this file
+// needs to change when hosted standalone (Vercel, GitHub Pages, etc).
+if (typeof window.storage === 'undefined') {
+  window.storage = {
+    async get(key, shared){
+      const raw = localStorage.getItem(key);
+      if (raw === null) return null;
+      return { key, value: raw, shared: !!shared };
+    },
+    async set(key, value, shared){
+      localStorage.setItem(key, value);
+      return { key, value, shared: !!shared };
+    },
+    async delete(key, shared){
+      const existed = localStorage.getItem(key) !== null;
+      localStorage.removeItem(key);
+      return { key, deleted: existed, shared: !!shared };
+    },
+    async list(prefix, shared){
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (!prefix || (k && k.startsWith(prefix))) keys.push(k);
+      }
+      return { keys, prefix, shared: !!shared };
+    }
+  };
+}
+
+let state = {
+  players: [ {id:1,name:'',active:true}, {id:2,name:'',active:true} ],
+  nextPlayerId: 3,
+  config: { drop:3, middleDrop:5, booked:10 },
+  started: false,
+  dealerId: null,
+  draft: {}, // playerId -> {status, points}
+  rounds: [],
+  gameStartedAt: null,
+  eveningStartedAt: null, // persists across auto game-rollovers; only resets on New Game
+  dealtThisGame: [], // player ids who have dealt at least once in the CURRENT game
+  archive: [] // past completed games: {startedAt, endedAt, eveningStartedAt, config, players, rounds}
+};
+
+function uid(){ return Date.now() + Math.floor(Math.random()*1000); }
+function findPlayer(id){ return state.players.find(p=>p.id===Number(id)); }
+function activePlayers(){ return state.players.filter(p=>p.active !== false); }
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){ console.warn('storage save failed', e); }
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed && parsed.players){
+        parsed.players.forEach(p=>{ if(p.active === undefined) p.active = true; });
+        if(!Array.isArray(parsed.archive)) parsed.archive = [];
+        if(parsed.gameStartedAt === undefined) parsed.gameStartedAt = null;
+        if(!Array.isArray(parsed.dealtThisGame)) parsed.dealtThisGame = [];
+        if(parsed.eveningStartedAt === undefined) parsed.eveningStartedAt = parsed.gameStartedAt || null;
+        state = parsed;
+      }
+    }
+  }catch(e){ /* no saved state yet */ }
+}
+
+// ---------- SETUP SCREEN ----------
+function renderPlayerList(){
+  const wrap = document.getElementById('playerList');
+  wrap.innerHTML = '';
+  state.players.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Player ${idx+1} name" value="${p.name.replace(/"/g,'&quot;')}" data-pid="${p.id}">
+      <button class="icon-btn" data-remove="${p.id}" title="Remove player">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const pid = Number(e.target.dataset.pid);
+      const p = state.players.find(x=>x.id===pid);
+      if(p) p.name = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(state.players.length <= 2) return;
+      state.players = state.players.filter(p=>p.id !== Number(btn.dataset.remove));
+      renderPlayerList();
+    });
+  });
+}
+
+document.getElementById('addPlayerBtn').addEventListener('click', ()=>{
+  if(state.players.length >= 8) return;
+  state.players.push({id: state.nextPlayerId++, name:'', active:true});
+  renderPlayerList();
+});
+
+document.getElementById('startGameBtn').addEventListener('click', ()=>{
+  const errBox = document.getElementById('setupError');
+  errBox.innerHTML = '';
+  const names = state.players.map(p=>p.name.trim());
+  if(names.some(n=>n==='')){
+    errBox.innerHTML = '<div class="errbox">Every player needs a name.</div>';
+    return;
+  }
+  state.config.drop = Number(document.getElementById('cfgDrop').value) || 0;
+  state.config.middleDrop = Number(document.getElementById('cfgMiddle').value) || 0;
+  state.config.booked = Number(document.getElementById('cfgBooked').value) || 0;
+  state.started = true;
+  state.gameStartedAt = Date.now();
+  state.eveningStartedAt = Date.now();
+  state.dealerId = state.players[0].id;
+  resetDraft();
+  saveState();
+  showGameScreen();
+});
+
+// ---------- GAME SCREEN ----------
+function resetDraft(){
+  state.draft = {};
+  activePlayers().forEach(p=>{ state.draft[p.id] = {status:null, points:0, splitAmount:0, splitTouched:false}; });
+}
+
+function round2(n){ return Math.round((Number(n)||0) * 100) / 100; }
+
+function currentRoundNumber(){ return state.rounds.length + 1; }
+
+function showGameScreen(){
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  document.getElementById('gameCompleteBanner').style.display = 'none';
+  document.getElementById('cfgDropDisp').textContent = state.config.drop;
+  document.getElementById('cfgMiddleDisp').textContent = state.config.middleDrop;
+  document.getElementById('cfgBookedDisp').textContent = state.config.booked;
+  document.getElementById('playerCountDisp').textContent = activePlayers().length;
+  renderPlayersChipRow();
+  renderDealerSelect();
+  renderRoundNum();
+  renderPlayerStatusList();
+  renderGameHistory();
+  renderScoreboard();
+  renderSettle();
+}
+
+function renderPlayersChipRow(){
+  const wrap = document.getElementById('playersChipRow');
+  wrap.innerHTML = state.players.map(p=>{
+    const inactive = p.active === false;
+    return `
+      <div class="player-chip ${inactive?'inactive':''}">
+        <span>${p.name}${inactive?'<span class="left-tag">left</span>':''}</span>
+        ${inactive
+          ? `<button class="rejoin-btn" data-rejoin="${p.id}">Rejoin</button>`
+          : `<button class="leave-btn" data-leave="${p.id}" title="Leave the table">✕</button>`
+        }
+      </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-leave]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(activePlayers().length <= 2){ alert('Need at least 2 active players.'); return; }
+      const pid = Number(btn.dataset.leave);
+      const p = findPlayer(pid);
+      p.active = false;
+      delete state.draft[pid];
+      if(state.dealerId === pid){
+        const rest = activePlayers();
+        state.dealerId = rest.length ? rest[0].id : null;
+      }
+      saveState();
+      showGameScreen();
+    });
+  });
+  wrap.querySelectorAll('[data-rejoin]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const pid = Number(btn.dataset.rejoin);
+      const p = findPlayer(pid);
+      p.active = true;
+      state.draft[pid] = {status:null, points:0, splitAmount:0, splitTouched:false};
+      saveState();
+      showGameScreen();
+    });
+  });
+}
+
+document.getElementById('midGameAddBtn').addEventListener('click', ()=>{
+  const inp = document.getElementById('midGamePlayerName');
+  const name = inp.value.trim();
+  if(!name) return;
+  const newId = state.nextPlayerId++;
+  state.players.push({id:newId, name, active:true});
+  state.draft[newId] = {status:null, points:0, splitAmount:0, splitTouched:false};
+  if(!state.dealerId) state.dealerId = newId;
+  inp.value = '';
+  saveState();
+  showGameScreen();
+});
+
+function renderDealerSelect(){
+  const sel = document.getElementById('dealerSelect');
+  const ap = activePlayers();
+  if(!ap.find(p=>p.id===state.dealerId)) state.dealerId = ap.length ? ap[0].id : null;
+  sel.innerHTML = ap.map(p=>`<option value="${p.id}" ${p.id===state.dealerId?'selected':''}>${p.name}</option>`).join('');
+  sel.onchange = ()=>{ state.dealerId = Number(sel.value); saveState(); };
+}
+
+function renderRoundNum(){
+  document.getElementById('roundNumDisplay').textContent = currentRoundNumber();
+  document.getElementById('gameNumDisplay').textContent = state.archive.length + 1;
+}
+
+function paymentForStatus(status, points, cfg){
+  if(status==='drop') return cfg.drop;
+  if(status==='middle-drop') return cfg.middleDrop;
+  if(status==='booked') return cfg.booked;
+  if(status==='winner') return 0;
+  if(status==='first') return cfg.drop;
+  if(status==='second') return cfg.middleDrop;
+  if(status==='nil') return 0;
+  return 0; // 'split' payment comes from draft.splitAmount, not this function
+}
+
+function renderPlayerStatusList(){
+  const wrap = document.getElementById('playerStatusList');
+  wrap.innerHTML = '';
+  const statuses = [
+    {key:'drop', label:'Drop'},
+    {key:'middle-drop', label:'Middle-drop'},
+    {key:'first', label:'First'},
+    {key:'second', label:'Second'},
+    {key:'nil', label:'Nil'},
+    {key:'split', label:'Split'},
+    {key:'booked', label:'Booked'},
+    {key:'winner', label:'Winner'}
+  ];
+  activePlayers().forEach(p=>{
+    const d = state.draft[p.id] || {status:null, points:0, splitAmount:0, splitTouched:false};
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    const isDealer = p.id === state.dealerId;
+    card.innerHTML = `
+      <div class="pname">${p.name}${isDealer?'<span class="dealer-badge">Dealer</span>':''}</div>
+      <div class="status-grid">
+        ${statuses.map(s=>`<div class="stamp" data-status="${s.key}" data-pid="${p.id}">${s.label}</div>`).join('')}
+        <span class="split-inline" id="split-${p.id}" style="display:none;">
+          $<input type="number" step="0.5" min="0" placeholder="0" data-split-pid="${p.id}">
+        </span>
+      </div>
+      <div class="payline" id="payline-${p.id}"></div>
+    `;
+    wrap.appendChild(card);
+  });
+  applyDraftToDom();
+  wrap.querySelectorAll('.stamp').forEach(st=>{
+    st.addEventListener('click', ()=>{
+      const pid = Number(st.dataset.pid);
+      const status = st.dataset.status;
+      const d = state.draft[pid];
+      const turningOn = d.status !== status;
+
+      if(status === 'split' && turningOn){
+        const currentSplitCount = activePlayers().filter(p=> state.draft[p.id] && state.draft[p.id].status === 'split').length;
+        if(currentSplitCount >= 2){
+          document.getElementById('roundError').innerHTML = '<div class="errbox">Only 2 players can be marked Split at once — remove one first.</div>';
+          return;
+        }
+      }
+
+      if(status === 'winner' && turningOn){
+        // only one winner allowed
+        activePlayers().forEach(p=>{
+          if(p.id !== pid && state.draft[p.id] && state.draft[p.id].status === 'winner'){
+            state.draft[p.id].status = null;
+          }
+        });
+      }
+
+      d.status = turningOn ? status : null;
+      if(d.status === 'split'){
+        d.splitAmount = 0;
+        d.splitTouched = false;
+      }
+
+      recomputeSplits(null);
+      applyDraftToDom();
+      renderSplitSummary();
+    });
+  });
+  wrap.querySelectorAll('[data-split-pid]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const pid = Number(inp.dataset.splitPid);
+      state.draft[pid].splitAmount = Number(inp.value) || 0;
+      state.draft[pid].splitTouched = true;
+      recomputeSplits(pid);
+      applyDraftToDom();
+      renderSplitSummary();
+    });
+  });
+  renderSplitSummary();
+}
+
+function recomputeSplits(editedPid){
+  const splitIds = activePlayers()
+    .filter(p => state.draft[p.id] && state.draft[p.id].status === 'split')
+    .map(p => p.id);
+  if(splitIds.length === 0) return;
+
+  const otherTotal = activePlayers()
+    .filter(p => !(state.draft[p.id] && state.draft[p.id].status === 'split'))
+    .reduce((sum,p)=> sum + (state.draft[p.id] && state.draft[p.id].status ? paymentForStatus(state.draft[p.id].status, state.draft[p.id].points, state.config) : 0), 0);
+
+  if(splitIds.length === 1){
+    const entry = state.draft[splitIds[0]];
+    if(editedPid !== splitIds[0] && !entry.splitTouched){
+      entry.splitAmount = round2(otherTotal);
+    }
+    return;
+  }
+
+  const [idA, idB] = splitIds;
+  const a = state.draft[idA], b = state.draft[idB];
+
+  if(editedPid === idA){
+    a.splitTouched = true;
+    if(!b.splitTouched) b.splitAmount = round2(otherTotal - Number(a.splitAmount||0));
+  } else if(editedPid === idB){
+    b.splitTouched = true;
+    if(!a.splitTouched) a.splitAmount = round2(otherTotal - Number(b.splitAmount||0));
+  } else {
+    if(!a.splitTouched && !b.splitTouched){
+      a.splitAmount = round2(otherTotal/2);
+      b.splitAmount = round2(otherTotal/2);
+    } else if(!a.splitTouched){
+      a.splitAmount = round2(otherTotal - Number(b.splitAmount||0));
+    } else if(!b.splitTouched){
+      b.splitAmount = round2(otherTotal - Number(a.splitAmount||0));
+    }
+  }
+}
+
+function renderSplitSummary(){
+  const el = document.getElementById('splitSummary');
+  if(!el) return;
+  const splitIds = activePlayers()
+    .filter(p => state.draft[p.id] && state.draft[p.id].status === 'split')
+    .map(p => p.id);
+  if(splitIds.length === 0){
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = 'block';
+  if(splitIds.length === 1){
+    const soloName = findPlayer(splitIds[0]).name;
+    el.innerHTML = `<div class="errbox">Split needs two players — right now only ${soloName} is marked Split. Pick Split for one more player, or change ${soloName} back to a different status.</div>`;
+    return;
+  }
+  const otherTotal = activePlayers()
+    .filter(p => !(state.draft[p.id] && state.draft[p.id].status === 'split'))
+    .reduce((sum,p)=> sum + (state.draft[p.id] && state.draft[p.id].status ? paymentForStatus(state.draft[p.id].status, state.draft[p.id].points, state.config) : 0), 0);
+  const splitSum = splitIds.reduce((sum,id)=> sum + (Number(state.draft[id].splitAmount)||0), 0);
+  const diff = Math.abs(splitSum - otherTotal);
+  if(diff > 0.01){
+    el.innerHTML = `<div class="errbox">Split totals $${splitSum.toFixed(2)} — it needs to equal $${otherTotal.toFixed(2)} (the sum of everyone else's charges this round).</div>`;
+  } else {
+    el.innerHTML = `<div class="split-ok">✓ Split totals $${splitSum.toFixed(2)}, matching the rest of the table.</div>`;
+  }
+}
+
+function applyDraftToDom(){
+  activePlayers().forEach(p=>{
+    const d = state.draft[p.id];
+    document.querySelectorAll(`.stamp[data-pid="${p.id}"]`).forEach(st=>{
+      st.classList.toggle('active', st.dataset.status === d.status);
+    });
+    const splitSpan = document.getElementById(`split-${p.id}`);
+    if(splitSpan){
+      splitSpan.style.display = (d.status === 'split') ? 'inline-flex' : 'none';
+      const inp = splitSpan.querySelector('input');
+      if(inp && document.activeElement !== inp){
+        inp.value = (d.splitAmount !== undefined && d.splitAmount !== null) ? d.splitAmount : '';
+      }
+    }
+    updatePayline(p.id);
+  });
+}
+
+function updatePayline(pid){
+  const el = document.getElementById(`payline-${pid}`);
+  if(!el) return;
+  const d = state.draft[pid];
+  if(!d.status){ el.textContent = ''; return; }
+  if(d.status === 'winner'){ el.textContent = 'Collects the pool'; return; }
+  if(d.status === 'nil'){ el.textContent = 'Pays nothing (nil)'; return; }
+  if(d.status === 'split'){
+    const amt = Number(d.splitAmount)||0;
+    el.textContent = `Pays $${amt.toFixed(2)} (split)`;
+    return;
+  }
+  const amt = paymentForStatus(d.status, d.points, state.config);
+  el.textContent = amt > 0 ? `Pays $${amt.toFixed(2)}` : 'Pays nothing (nil)';
+}
+
+document.getElementById('saveRoundBtn').addEventListener('click', ()=>{
+  const errBox = document.getElementById('roundError');
+  errBox.innerHTML = '';
+  const ap = activePlayers();
+  const missing = ap.filter(p=>!state.draft[p.id] || !state.draft[p.id].status);
+  if(missing.length){
+    errBox.innerHTML = `<div class="errbox">Set a status for: ${missing.map(p=>p.name).join(', ')}</div>`;
+    return;
+  }
+  const winners = ap.filter(p=>state.draft[p.id].status === 'winner');
+  if(winners.length !== 1){
+    errBox.innerHTML = `<div class="errbox">Exactly one player must be marked Winner.</div>`;
+    return;
+  }
+  const splitPlayers = ap.filter(p=>state.draft[p.id].status === 'split');
+  if(splitPlayers.length === 1){
+    errBox.innerHTML = `<div class="errbox">Split needs two players — right now only ${splitPlayers[0].name} is marked Split. Pick Split for one more player, or change ${splitPlayers[0].name} back to a different status.</div>`;
+    return;
+  }
+  if(splitPlayers.length === 2){
+    const otherTotal = ap
+      .filter(p=>state.draft[p.id].status !== 'split')
+      .reduce((sum,p)=> sum + paymentForStatus(state.draft[p.id].status, state.draft[p.id].points, state.config), 0);
+    const splitSum = splitPlayers.reduce((sum,p)=> sum + (Number(state.draft[p.id].splitAmount)||0), 0);
+    if(Math.abs(splitSum - otherTotal) > 0.01){
+      errBox.innerHTML = `<div class="errbox">Split amounts total $${splitSum.toFixed(2)} but need to equal $${otherTotal.toFixed(2)} — the sum of everyone else's charges this round. Adjust the Split boxes.</div>`;
+      return;
+    }
+  }
+  const entries = {};
+  let pot = 0;
+  ap.forEach(p=>{
+    const d = state.draft[p.id];
+    const payment = (d.status === 'split') ? (Number(d.splitAmount)||0) : paymentForStatus(d.status, d.points, state.config);
+    entries[p.id] = { status: d.status, points: d.points, payment };
+    if(d.status !== 'winner') pot += payment;
+  });
+  entries[winners[0].id].payment = -pot; // negative payment = receives
+
+  const savedRoundNum = currentRoundNumber();
+
+  state.rounds.push({
+    number: savedRoundNum,
+    dealerId: state.dealerId,
+    entries,
+    pot
+  });
+
+  if(!state.dealtThisGame.includes(state.dealerId)) state.dealtThisGame.push(state.dealerId);
+
+  // rotate dealer suggestion among currently active players
+  const curIdx = ap.findIndex(p=>p.id===state.dealerId);
+  state.dealerId = ap[(curIdx+1) % ap.length].id;
+
+  // a game ends once every currently active player has dealt at least once
+  const stillToDeal = ap.filter(p => !state.dealtThisGame.includes(p.id));
+  let rolloverMsg = null;
+  if(stillToDeal.length === 0){
+    const finishedGameNum = state.archive.length + 1;
+    state.archive.push({
+      startedAt: state.gameStartedAt,
+      endedAt: Date.now(),
+      eveningStartedAt: state.eveningStartedAt,
+      config: JSON.parse(JSON.stringify(state.config)),
+      players: JSON.parse(JSON.stringify(state.players)),
+      rounds: JSON.parse(JSON.stringify(state.rounds))
+    });
+    state.rounds = [];
+    state.dealtThisGame = [];
+    state.gameStartedAt = Date.now();
+    // eveningStartedAt deliberately NOT reset — this is still the same evening
+    rolloverMsg = `Game ${finishedGameNum} complete — every player has dealt. Now on Game ${finishedGameNum + 1}.`;
+  }
+
+  resetDraft();
+  saveState();
+  renderDealerSelect();
+  renderRoundNum();
+  renderPlayerStatusList();
+  renderGameHistory();
+  renderScoreboard();
+  renderSettle();
+
+  const banner = document.getElementById('gameCompleteBanner');
+  if(rolloverMsg){
+    banner.innerHTML = `<div class="game-complete-banner">🎉 <b>${rolloverMsg}</b></div>`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  const confirmEl = document.getElementById('saveConfirm');
+  confirmEl.textContent = `✓ Round ${savedRoundNum} saved`;
+  confirmEl.style.display = 'inline';
+  clearTimeout(window._saveConfirmTimer);
+  window._saveConfirmTimer = setTimeout(()=>{ confirmEl.style.display = 'none'; }, 3000);
+});
+
+function computeNetsFor(players, rounds){
+  const nets = {};
+  players.forEach(p=> nets[p.id] = 0);
+  rounds.forEach(r=>{
+    Object.keys(r.entries).forEach(pid=>{
+      if(nets[pid] === undefined) nets[pid] = 0;
+      nets[pid] -= r.entries[pid].payment;
+    });
+  });
+  return nets;
+}
+function computeNets(){ return computeNetsFor(state.players, state.rounds); }
+
+function getSessionGamesList(){
+  const relevantArchiveGames = (state.archive || []).filter(g => g.eveningStartedAt === state.eveningStartedAt && state.eveningStartedAt !== null);
+  const gamesList = relevantArchiveGames.map((g,i)=>({label:`Game ${i+1}`, players:g.players, rounds:g.rounds}));
+  if(state.rounds.length > 0){
+    gamesList.push({label:`Game ${gamesList.length+1} (current)`, players: state.players, rounds: state.rounds});
+  }
+  return gamesList;
+}
+
+function renderGameHistory(){
+  const wrap = document.getElementById('gameHistoryWrap');
+  const gamesList = getSessionGamesList();
+  if(gamesList.length === 0){
+    wrap.innerHTML = '<div class="empty">No games recorded yet this session.</div>';
+    return;
+  }
+  let allRounds = [];
+  gamesList.forEach(g=>{ allRounds = allRounds.concat(g.rounds); });
+  const finalNets = computeNetsFor(state.players, allRounds);
+
+  const header = '<tr><th>Game</th>' + state.players.map(p=>`<th>${p.name}${p.active===false?'<span class="left-tag">left</span>':''}</th>`).join('') + '</tr>';
+
+  const rows = gamesList.map(g=>{
+    const nets = computeNetsFor(g.players, g.rounds);
+    const cells = state.players.map(p=>{
+      const n = nets[p.id];
+      if(n === undefined) return '<td class="zero">—</td>';
+      const cls = n>0.001?'positive':n<-0.001?'negative':'zero';
+      const sign = n>0.001?'+':'';
+      return `<td class="${cls}">${sign}$${n.toFixed(2)}</td>`;
+    }).join('');
+    return `<tr><td style="font-family:'IBM Plex Sans',sans-serif;font-weight:600;white-space:nowrap;">${g.label}</td>${cells}</tr>`;
+  }).join('');
+
+  const sessionCells = state.players.map(p=>{
+    const fn = finalNets[p.id] || 0;
+    const fcls = fn>0.001?'positive':fn<-0.001?'negative':'zero';
+    const fsign = fn>0.001?'+':'';
+    return `<td class="${fcls}" style="font-weight:700;border-top:2px solid var(--ink);padding-top:12px;">${fsign}$${fn.toFixed(2)}</td>`;
+  }).join('');
+  const sessionRow = `<tr><td style="font-weight:700;border-top:2px solid var(--ink);padding-top:12px;">Session</td>${sessionCells}</tr>`;
+
+  wrap.innerHTML = `<table>${header}${rows}${sessionRow}</table>`;
+}
+
+const STATUS_LABEL = {
+  'drop':'Drop', 'middle-drop':'Middle-drop', 'first':'First', 'second':'Second', 'nil':'Nil', 'split':'Split', 'booked':'Booked', 'winner':'Winner'
+};
+
+function scoreCellHtml(e){
+  if(!e) return '<span class="sb-nil">—</span>';
+  if(e.status === 'winner') return `<span class="sb-winner">W +$${(-e.payment).toFixed(0)}</span>`;
+  if(e.status === 'nil') return `<span class="sb-nil">Nil</span>`;
+  const codes = {drop:'D', 'middle-drop':'M', first:'1st', second:'2nd', split:'Spl', booked:'B'};
+  const code = codes[e.status] || '?';
+  if(e.payment <= 0.001) return `<span class="sb-nil">${code} nil</span>`;
+  return `<span class="sb-pay">${code} -$${e.payment.toFixed(0)}</span>`;
+}
+
+function renderScoreboard(){
+  const wrap = document.getElementById('scoreboardWrap');
+  if(state.rounds.length === 0){
+    wrap.innerHTML = '<div class="empty">Save a round to start filling this in.</div>';
+    return;
+  }
+  const nets = computeNets();
+  const shownPlayers = state.players.filter(p=>{
+    const everPlayed = state.rounds.some(r => r.entries[p.id]);
+    return everPlayed || p.active !== false;
+  });
+
+  let head = '<tr><th>Round</th>';
+  shownPlayers.forEach(p=> head += `<th>${p.name}${p.active===false?'<span class="left-tag">left</span>':''}</th>`);
+  head += '</tr>';
+
+  let rows = '';
+  state.rounds.forEach(r=>{
+    let row = `<tr><td>R${r.number}</td>`;
+    shownPlayers.forEach(p=>{
+      row += `<td>${scoreCellHtml(r.entries[p.id])}</td>`;
+    });
+    row += '</tr>';
+    rows += row;
+  });
+
+  let netRow = '<tr><td style="font-weight:700;">Net</td>';
+  shownPlayers.forEach(p=>{
+    const n = nets[p.id] || 0;
+    const cls = n>0.001?'positive': n<-0.001?'negative':'zero';
+    const sign = n>0.001?'+':'';
+    netRow += `<td class="sb-net ${cls}">${sign}$${n.toFixed(0)}</td>`;
+  });
+  netRow += '</tr>';
+
+  wrap.innerHTML = `<table class="scoreboard-table">${head}${rows}${netRow}</table>`;
+}
+
+function renderSettle(){
+  const wrap = document.getElementById('settleWrap');
+  const { allRounds } = eveningRoundsAndGameCount();
+  if(allRounds.length === 0){
+    wrap.innerHTML = '<div class="empty">Nothing to settle yet.</div>';
+    return;
+  }
+  const nets = computeNetsFor(state.players, allRounds);
+  const withNets = state.players.map(p=>({id:p.id,name:p.name,amt:nets[p.id]||0}));
+  const winners = withNets.filter(x=>x.amt > 0.001).sort((a,b)=>b.amt-a.amt);
+  const losers = withNets.filter(x=>x.amt < -0.001).sort((a,b)=>a.amt-b.amt);
+
+  if(winners.length === 0){
+    wrap.innerHTML = '<div class="empty">Everyone is settled — net zero.</div>';
+    return;
+  }
+
+  const topWinner = winners[0];
+  const otherWinners = winners.slice(1);
+  const tie = winners.length > 1 && Math.abs(winners[1].amt - topWinner.amt) < 0.001;
+
+  const txns = [];
+  losers.forEach(l=>{
+    txns.push({from: l.name, to: topWinner.name, amt: -l.amt});
+  });
+  otherWinners.forEach(w=>{
+    txns.push({from: topWinner.name, to: w.name, amt: w.amt});
+  });
+
+  let html = '';
+  if(tie){
+    html += `<div class="rule-note" style="margin-top:0;margin-bottom:14px;">Two or more players are tied for the top net amount — ${topWinner.name} was picked as the hub. Adjust manually if you'd rather split it differently.</div>`;
+  }
+  html += `<ul class="settle-list">${txns.map(t=>`<li><span>${t.from} → ${t.to}</span><span class="amt">$${t.amt.toFixed(2)}</span></li>`).join('')}</ul>`;
+  wrap.innerHTML = html;
+}
+
+document.getElementById('editConfigLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  const cfg = state.config;
+
+  const dInput = prompt('Drop amount ($)', cfg.drop);
+  if(dInput !== null){
+    const d = Number(dInput);
+    if(!isNaN(d)) cfg.drop = d;
+  }
+
+  const mInput = prompt('Middle-drop amount ($)', cfg.middleDrop);
+  if(mInput !== null){
+    const m = Number(mInput);
+    if(!isNaN(m)) cfg.middleDrop = m;
+  }
+
+  const bInput = prompt('Booked / full-count amount ($)', cfg.booked);
+  if(bInput !== null){
+    const b = Number(bInput);
+    if(!isNaN(b)) cfg.booked = b;
+  }
+
+  document.getElementById('cfgDropDisp').textContent = cfg.drop;
+  document.getElementById('cfgMiddleDisp').textContent = cfg.middleDrop;
+  document.getElementById('cfgBookedDisp').textContent = cfg.booked;
+  renderPlayerStatusList();
+  saveState();
+});
+
+document.getElementById('newGameBtn').addEventListener('click', async ()=>{
+  if(!confirm('Start a brand new game? The current one will be saved to the archive (included in Excel exports) and the table will be cleared.')) return;
+  if(state.rounds.length > 0){
+    state.archive.push({
+      startedAt: state.gameStartedAt,
+      endedAt: Date.now(),
+      eveningStartedAt: state.eveningStartedAt,
+      config: JSON.parse(JSON.stringify(state.config)),
+      players: JSON.parse(JSON.stringify(state.players)),
+      rounds: JSON.parse(JSON.stringify(state.rounds))
+    });
+  }
+  const keepArchive = state.archive;
+  state = {
+    players: [ {id:1,name:'',active:true}, {id:2,name:'',active:true} ],
+    nextPlayerId: 3,
+    config: { drop:3, middleDrop:5, booked:10 },
+    started: false,
+    dealerId: null,
+    draft: {},
+    rounds: [],
+    gameStartedAt: null,
+    eveningStartedAt: null,
+    dealtThisGame: [],
+    archive: keepArchive
+  };
+  await saveState();
+  renderPlayerList();
+  document.getElementById('gameScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'block';
+});
+
+function allGamesForExport(){
+  const games = (state.archive || []).map((g,i)=>({
+    label: `Game ${i+1}`,
+    startedAt: g.startedAt,
+    endedAt: g.endedAt,
+    config: g.config,
+    players: g.players,
+    rounds: g.rounds
+  }));
+  if(state.rounds.length > 0){
+    games.push({
+      label: `Game ${games.length+1} (current)`,
+      startedAt: state.gameStartedAt,
+      endedAt: null,
+      config: state.config,
+      players: state.players,
+      rounds: state.rounds
+    });
+  }
+  return games;
+}
+
+function fmtDate(ts){
+  return ts ? new Date(ts).toLocaleString() : '—';
+}
+
+function exportToExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('Excel export library failed to load — check your connection and try again.');
+    return;
+  }
+  const games = allGamesForExport();
+  if(games.length === 0){
+    alert('No rounds recorded in any game yet — nothing to export.');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  // --- Games overview sheet ---
+  const overviewRows = [['Game','Started','Ended','Players','Drop ($)','Middle-drop ($)','Booked ($)','Rounds','Top winner','Top winner net ($)']];
+  games.forEach(g=>{
+    const nets = computeNetsFor(g.players, g.rounds);
+    const ranked = g.players.map(p=>({name:p.name, amt:nets[p.id]||0})).sort((a,b)=>b.amt-a.amt);
+    const top = ranked[0];
+    overviewRows.push([
+      g.label,
+      fmtDate(g.startedAt),
+      g.endedAt ? fmtDate(g.endedAt) : 'In progress',
+      g.players.map(p=>p.name).join(', '),
+      g.config.drop, g.config.middleDrop, g.config.booked,
+      g.rounds.length,
+      top ? top.name : '',
+      top ? Number(top.amt.toFixed(2)) : ''
+    ]);
+  });
+  const wsOverview = XLSX.utils.aoa_to_sheet(overviewRows);
+  wsOverview['!cols'] = [{wch:16},{wch:18},{wch:18},{wch:28},{wch:10},{wch:14},{wch:10},{wch:8},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsOverview, 'Games');
+
+  // --- Round history sheet (all games) ---
+  const roundRows = [['Game','Round','Dealer','Player','Status','Amount ($)','Note']];
+  games.forEach(g=>{
+    const findIn = (id)=> g.players.find(p=>p.id===Number(id));
+    g.rounds.forEach(r=>{
+      const dealer = findIn(r.dealerId);
+      Object.keys(r.entries).forEach(pid=>{
+        const p = findIn(pid);
+        const e = r.entries[pid];
+        roundRows.push([
+          g.label,
+          r.number,
+          dealer ? dealer.name : '',
+          p ? p.name : `(#${pid})`,
+          STATUS_LABEL[e.status] || e.status,
+          Number((-e.payment).toFixed(2)), // positive = received, negative = paid
+          e.status === 'winner' ? 'Collected the pool' : (e.status === 'split' ? 'Split charge' : '')
+        ]);
+      });
+    });
+  });
+  const wsRounds = XLSX.utils.aoa_to_sheet(roundRows);
+  wsRounds['!cols'] = [{wch:16},{wch:8},{wch:14},{wch:16},{wch:14},{wch:12},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, wsRounds, 'Round History');
+
+  // --- Totals sheet (all games) ---
+  const totalsRows = [['Game','Player','Net ($)','Status']];
+  games.forEach(g=>{
+    const nets = computeNetsFor(g.players, g.rounds);
+    g.players.forEach(p=>{
+      totalsRows.push([g.label, p.name, Number((nets[p.id]||0).toFixed(2)), p.active===false ? 'Left table' : 'Active']);
+    });
+  });
+  const wsTotals = XLSX.utils.aoa_to_sheet(totalsRows);
+  wsTotals['!cols'] = [{wch:16},{wch:16},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsTotals, 'Totals');
+
+  // --- Settlement sheet (all games) ---
+  const settleRows = [['Game','From','To','Amount ($)']];
+  games.forEach(g=>{
+    const nets = computeNetsFor(g.players, g.rounds);
+    const withNets = g.players.map(p=>({name:p.name, amt:nets[p.id]||0}));
+    const winners = withNets.filter(x=>x.amt > 0.001).sort((a,b)=>b.amt-a.amt);
+    const losers = withNets.filter(x=>x.amt < -0.001).sort((a,b)=>a.amt-b.amt);
+    if(winners.length){
+      const topWinner = winners[0];
+      losers.forEach(l=> settleRows.push([g.label, l.name, topWinner.name, Number((-l.amt).toFixed(2))]));
+      winners.slice(1).forEach(w=> settleRows.push([g.label, topWinner.name, w.name, Number(w.amt.toFixed(2))]));
+    }
+  });
+  const wsSettle = XLSX.utils.aoa_to_sheet(settleRows);
+  wsSettle['!cols'] = [{wch:16},{wch:16},{wch:16},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsSettle, 'Settlement');
+
+  const dateStr = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `rummy-ledger-all-games-${dateStr}.xlsx`);
+}
+
+document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+function eveningRoundsAndGameCount(){
+  const relevantArchiveGames = (state.archive || []).filter(g => g.eveningStartedAt === state.eveningStartedAt && state.eveningStartedAt !== null);
+  let allRounds = [];
+  relevantArchiveGames.forEach(g => { allRounds = allRounds.concat(g.rounds); });
+  allRounds = allRounds.concat(state.rounds);
+  const gameCount = relevantArchiveGames.length + (state.rounds.length > 0 ? 1 : 0);
+  return { allRounds, gameCount };
+}
+
+function buildShareCardHTML(){
+  const { allRounds, gameCount } = eveningRoundsAndGameCount();
+  const nets = computeNetsFor(state.players, allRounds);
+  const ranked = state.players
+    .map(p=>({name:p.name, amt:nets[p.id]||0}))
+    .sort((a,b)=>b.amt-a.amt);
+
+  const winners = ranked.filter(x=>x.amt > 0.001);
+  const losers = ranked.filter(x=>x.amt < -0.001).sort((a,b)=>a.amt-b.amt);
+  const txns = [];
+  if(winners.length){
+    const top = winners[0];
+    losers.forEach(l=> txns.push({from:l.name, to:top.name, amt:-l.amt}));
+    winners.slice(1).forEach(w=> txns.push({from:top.name, to:w.name, amt:w.amt}));
+  }
+
+  const dateLabel = new Date(state.eveningStartedAt || Date.now()).toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  const rowsHtml = ranked.map(p=>{
+    const cls = p.amt>0.001?'positive':p.amt<-0.001?'negative':'';
+    const sign = p.amt>0.001?'+':'';
+    return `<tr><td class="sc-name">${p.name}</td><td class="sc-amt ${cls}" style="text-align:right;">${sign}$${p.amt.toFixed(2)}</td></tr>`;
+  }).join('');
+
+  const settleHtml = txns.length
+    ? txns.map(t=>`<div class="sc-settle-line"><span>${t.from} → ${t.to}</span><b>$${t.amt.toFixed(2)}</b></div>`).join('')
+    : `<div class="sc-settle-line"><span>Everyone's settled — net zero.</span></div>`;
+
+  const gamesList = getSessionGamesList();
+  let gamesTableHtml = '';
+  if(gamesList.length > 0){
+    const gHeader = '<tr><th>Game</th>' + state.players.map(p=>`<th>${p.name}</th>`).join('') + '</tr>';
+    const gRows = gamesList.map(g=>{
+      const gnets = computeNetsFor(g.players, g.rounds);
+      const cells = state.players.map(p=>{
+        const n = gnets[p.id];
+        if(n === undefined) return '<td>—</td>';
+        const cls = n>0.001?'positive':n<-0.001?'negative':'';
+        const sign = n>0.001?'+':'';
+        return `<td class="${cls}">${sign}$${n.toFixed(2)}</td>`;
+      }).join('');
+      return `<tr><td>${g.label.replace(' (current)','')}</td>${cells}</tr>`;
+    }).join('');
+    const tCells = state.players.map(p=>{
+      const n = nets[p.id] || 0;
+      const cls = n>0.001?'positive':n<-0.001?'negative':'';
+      const sign = n>0.001?'+':'';
+      return `<td class="${cls}">${sign}$${n.toFixed(2)}</td>`;
+    }).join('');
+    const tRow = `<tr class="sc-total-row"><td>Session</td>${tCells}</tr>`;
+    gamesTableHtml = `
+      <div class="sc-section-title">Game by game</div>
+      <table class="sc-games-table">${gHeader}${gRows}${tRow}</table>
+    `;
+  }
+
+  return `
+    <div class="sc-eyebrow">Indian Rummy · Final Tally</div>
+    <h1>Session Numbers</h1>
+    <div class="sc-sub">${dateLabel} · ${gameCount} game${gameCount===1?'':'s'} · ${allRounds.length} round${allRounds.length===1?'':'s'}</div>
+    <div class="sc-section-title">Net standings</div>
+    <table>${rowsHtml}</table>
+    ${gamesTableHtml}
+    <div class="sc-section-title">Settle up</div>
+    ${settleHtml}
+    <div class="sc-footer">ISPEET · ಇಸ್ಪೀಟ್ · ಪೇಕ · तेरह पत्ते</div>
+  `;
+}
+
+document.getElementById('downloadTallyBtn').addEventListener('click', async ()=>{
+  const { allRounds } = eveningRoundsAndGameCount();
+  if(allRounds.length === 0){
+    alert('No rounds recorded yet this session — nothing to share.');
+    return;
+  }
+  if(typeof html2canvas === 'undefined'){
+    alert('Image export library failed to load — check your connection and try again.');
+    return;
+  }
+  const host = document.getElementById('shareCardHost');
+  const cardWidth = Math.max(640, 460 + activePlayers().length * 90);
+  host.innerHTML = `<div class="share-card" id="shareCardInner" style="width:${cardWidth}px;">${buildShareCardHTML()}</div>`;
+  const node = document.getElementById('shareCardInner');
+  try{
+    const canvas = await html2canvas(node, {scale:2, backgroundColor:null});
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = `rummy-tally-${dateStr}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  }catch(err){
+    alert('Could not generate the image — please try again.');
+  } finally {
+    host.innerHTML = '';
+  }
+});
+
+// ---------- INIT ----------
+(async function init(){
+  await loadState();
+  renderPlayerList();
+
+  if(state.started){
+    if(!state.draft || Object.keys(state.draft).length === 0) resetDraft();
+    document.getElementById('cfgDrop').value = state.config.drop;
+    document.getElementById('cfgMiddle').value = state.config.middleDrop;
+    document.getElementById('cfgBooked').value = state.config.booked;
+    showGameScreen();
+  }
+})();
+</script>
+</body>
+</html>
